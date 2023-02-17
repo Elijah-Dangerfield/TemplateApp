@@ -1,0 +1,35 @@
+name: Create Release Branch
+on:
+  workflow_dispatch:
+    inputs:
+      versionName:
+        description: 'Version being released (ie 5.5.0)'
+        required: true
+
+jobs:
+  createrelease:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Check out the main branch
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Validate inputs
+        run: ./scripts/ci/release/validate_release_inputs.main.kts ${{ github.event.inputs.versionName }}
+
+      - name: Change version name
+        run: ./scripts/ci/set_version_name.main.kts ${{ github.event.inputs.versionName }}
+
+      - name: Create pull request into main
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.REPO_SCOPED_TOKEN }}
+          branch: release-templateapp/v${{ github.event.inputs.versionName }}
+          commit-message: Prepare release ${{ github.event.inputs.versionName }}
+          title: templateapp v${{ github.event.inputs.versionName }} into main
+          body: |
+            ## :rocket: This PR was created using the "Create Release Branch" workflow :rocket:
+            After the checks run, a release draft will be built and linked in a comment. 
+            After publishing the release draft, this PR must be merged manually.   

@@ -1,0 +1,134 @@
+name: Pull Request Workflow
+
+on:
+  # Triggers the workflow for pull requests into any (**) base branch
+  pull_request:
+    branches:
+      - "**"
+
+# ensures only 1 of these workflows can exist on a PR at a time. Cancels old ones when new ones are triggered
+concurrency:
+  group: pr-workflow-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    env:
+      isRelease: ""
+      releaseVersion: ""
+      releaseTagName: ""
+      releaseNotesFile: ""
+      debugApkPath: ""
+      releaseApkPath: ""
+      pullRequestLink: ""
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Update Version Codes
+        run: ./scripts/ci/set_version_code.main.kts ${{ github.run_number }}
+
+      - name: Set Env Variables
+        run: ./scripts/ci/set_pr_env_variables.main.kts ${{ github.event.pull_request.head.ref }} ${{ github.env }} ${{ github.event.pull_request.number }}
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Copy Gradle Properties File
+        run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
+
+      - name: Set Up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '11'
+
+      # https://stefma.medium.com/how-to-store-a-android-keystore-safely-on-github-actions-f0cef9413784
+      - name: Create Keystore
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE }}" > release.keystore.asc
+          gpg -d --passphrase "${{ secrets.RELEASE_KEYSTORE_PASSPHRASE }}" --batch release.keystore.asc > release.keystore
+
+      - name: Create Assets
+        id: createassets
+        run: ./scripts/ci/create_pr_assets.main.kts ${{ env.isRelease}} ${{ github.env }} release.keystore ${{ secrets.KEYSTORE_PASSWORD }} ${{ secrets.KEYALIAS }} ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload Release Signed Apk
+        uses: actions/upload-artifact@v3
+        with:
+          name: Release Apk
+          path: ${{ env.releaseApkPath }}
+
+      - name: Upload Release Signed Aab
+        if: ${{ env.isRelease == 'true' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: Release Aab
+          path: ${{ env.releaseAabPath }}
+
+      - name: Upload Debug Apk
+        uses: actions/upload-artifact@v3
+        with:
+          name: Debug Apk
+          path: ${{ env.debugApkPath }}
+
+      - name: Update Draft Release
+        if: ${{ env.isRelease == 'true' }}
+        run: ./scripts/ci/release/update_release_draft.main.kts "${GITHUB_REPOSITORY}" ${{ secrets.GITHUB_TOKEN }} ${{ env.releaseTagName }} ${{ env.releaseNotesFile }} ${{ env.releaseApkPath }} ${{ env.debugApkPath }} ${{ env.releaseAabPath }}
+
+      - name: Update PR Comment
+        run: ./scripts/ci/update_pr_comment.main.kts "${GITHUB_REPOSITORY}" ${{ secrets.GITHUB_TOKEN }} ${{ github.event.pull_request.number }} "${GITHUB_RUN_ID}" ${{ github.run_number }} ${{ env.releaseTagName }}
+
+  style:
+    runs-on: [ ubuntu-latest ]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '11'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Detekt All
+        run: ./gradlew detektAll
+
+      - name: Checkstyle
+        run: ./gradlew checkstyleAll
+
+  test:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Copy  gradle properties file
+        run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
+
+      - name: set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '11'
+
+      - name: Unit tests
+        run: ./gradlew test --stacktrace
