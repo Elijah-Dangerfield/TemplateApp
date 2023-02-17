@@ -15,6 +15,7 @@ For each PR the system runs:
 Updates to pull requests cancel any ongoing ci workflows for that pr and re run the 
 ci system again. 
 
+You can find an example PR showing the results of this CI system [here](https://github.com/Elijah-Dangerfield/TemplateApp/pull/2)
 
 ## The CD
 
