@@ -123,17 +123,11 @@ fun updateTemplateWithAppName(directory: File, appName: String) {
     files?.forEach { file ->
         if (file.isDirectory && !doNotCopy.contains(file.name)) {
             if (file.name.contains("templateapp") || file.name.contains("TemplateApp")) {
-                val origionalName = file.absolutePath
                 val newName = file.name
                     .replace("templateapp", appName.lowercase())
                     .replace("TemplateApp", appName)
 
-                val success = file.renameTo(File(newName))
-                if (success) {
-                    println("$origionalName Directory renamed successfully to $newName")
-                } else {
-                    println("$origionalName Directory renamed failed to $newName")
-                }
+                file.renameTo(File("${file.parent}/$newName"))
             }
 
             updateTemplateWithAppName(file, appName)
