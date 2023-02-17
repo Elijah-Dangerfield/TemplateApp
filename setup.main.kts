@@ -11,7 +11,8 @@ val red = "\u001b[31m"
 val green = "\u001b[32m"
 val reset = "\u001b[0m"
 
-val doNotCopy = arrayListOf(".git", ".idea", "README.md", "setup.main.kts")
+// purposely including .idea and build src
+val doNotCopy = arrayListOf(".git", "README.md", "setup.main.kts", ".gradle", ".idea", "build")
 
 fun printRed(text: String) {
     println(red + text + reset)
@@ -39,7 +40,8 @@ fun main() {
 
     // deleting after the update, as some directories may be added to the doNotCopy
     doNotCopy.forEach {
-        val dir = File("$newProject/$it")
+        val normalizedPath = it.removePrefix(appname)
+        val dir = File("$newProject/$normalizedPath")
         if (dir.exists()) dir.deleteRecursively()
     }
 
@@ -122,10 +124,9 @@ fun resetVersionCodeAndName(newProjectDir: String) {
 fun updateTemplateWithAppName(directory: File, appName: String) {
     val files = directory.listFiles()
     files?.forEach { file ->
-        if (file.isDirectory && file.name == "build") {
-            // do not copy over build dirs
+        if (file.isDirectory && doNotCopy.contains(file.name)) {
             doNotCopy.add(file.path)
-        } else if (file.isDirectory && !doNotCopy.contains(file.name)) {
+        } else if (file.isDirectory) {
             updateDirectoryName(file, appName)
             updateTemplateWithAppName(file, appName)
         } else if (file.isFile && !doNotCopy.contains(file.name)) {
