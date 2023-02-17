@@ -11,7 +11,7 @@ val red = "\u001b[31m"
 val green = "\u001b[32m"
 val reset = "\u001b[0m"
 
-val doNotCopy = listOf(".git", ".github", ".idea", "README.md", "setup.main.kts")
+val doNotCopy = listOf(".git", ".idea", "README.md", "setup.main.kts")
 
 fun printRed(text: String) {
     println(red + text + reset)
