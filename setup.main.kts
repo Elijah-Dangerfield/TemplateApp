@@ -12,7 +12,7 @@ val green = "\u001b[32m"
 val reset = "\u001b[0m"
 
 // purposely including .idea and build src
-val doNotCopy = arrayListOf(".git", "README.md", "setup.main.kts", ".gradle", ".idea", "build")
+val doNotCopy = arrayListOf(".git", "README.md", "setup.main.kts", ".gradle", "build")
 
 fun printRed(text: String) {
     println(red + text + reset)
@@ -127,15 +127,18 @@ fun updateTemplateWithAppName(directory: File, appName: String) {
         if (file.isDirectory && doNotCopy.contains(file.name)) {
             doNotCopy.add(file.path)
         } else if (file.isDirectory) {
-            updateDirectoryName(file, appName)
-            updateTemplateWithAppName(file, appName)
+            val newFile = updateFileOrDirectoryName(file, appName)
+            updateTemplateWithAppName(newFile, appName)
         } else if (file.isFile && !doNotCopy.contains(file.name)) {
+
             val originalContents = file.readText()
             val updatedContents = originalContents
                 .replace("templateapp", appName.lowercase())
                 .replace("TemplateApp", appName)
 
             updateFileContents(file, updatedContents, appName)
+
+            updateFileOrDirectoryName(file, appName)
         }
     }
 }
@@ -156,12 +159,16 @@ fun updateFileContents(file: File, updatedContents: String, appName: String) {
     }
 }
 
-fun updateDirectoryName(file: File, appName: String) {
+fun updateFileOrDirectoryName(file: File, appName: String): File {
     if (file.name.contains("templateapp") || file.name.contains("TemplateApp")) {
         val newName = file.name
             .replace("templateapp", appName.lowercase())
             .replace("TemplateApp", appName)
 
-        file.renameTo(File("${file.parent}/$newName"))
+        val newFile = File("${file.parent}/$newName")
+        file.renameTo(newFile)
+
+        return newFile
     }
+    return file
 }
