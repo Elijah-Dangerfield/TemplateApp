@@ -11,7 +11,7 @@ val red = "\u001b[31m"
 val green = "\u001b[32m"
 val reset = "\u001b[0m"
 
-val doNotCopy = listOf(".git", ".idea", "README.md", "setup.main.kts")
+val doNotCopy = arrayListOf(".git", ".idea", "README.md", "setup.main.kts")
 
 fun printRed(text: String) {
     println(red + text + reset)
@@ -35,12 +35,13 @@ fun main() {
 
     File(".").copyRecursively(newProject, overwrite = true)
 
+    updateTemplateWithAppName(newProject, appname)
+
+    // deleting after the update, as some directories may be added to the doNotCopy
     doNotCopy.forEach {
         val dir = File("$newProject/$it")
         if (dir.exists()) dir.deleteRecursively()
     }
-
-    updateTemplateWithAppName(newProject, appname)
 
     resetVersionCodeAndName("../$appname")
 
@@ -121,15 +122,11 @@ fun resetVersionCodeAndName(newProjectDir: String) {
 fun updateTemplateWithAppName(directory: File, appName: String) {
     val files = directory.listFiles()
     files?.forEach { file ->
-        if (file.isDirectory && !doNotCopy.contains(file.name)) {
-            if (file.name.contains("templateapp") || file.name.contains("TemplateApp")) {
-                val newName = file.name
-                    .replace("templateapp", appName.lowercase())
-                    .replace("TemplateApp", appName)
-
-                file.renameTo(File("${file.parent}/$newName"))
-            }
-
+        if (file.isDirectory && file.name == "build") {
+            // do not copy over build dirs
+            doNotCopy.add(file.path)
+        } else if (file.isDirectory && !doNotCopy.contains(file.name)) {
+            updateDirectoryName(file, appName)
             updateTemplateWithAppName(file, appName)
         } else if (file.isFile && !doNotCopy.contains(file.name)) {
             val originalContents = file.readText()
@@ -137,19 +134,33 @@ fun updateTemplateWithAppName(directory: File, appName: String) {
                 .replace("templateapp", appName.lowercase())
                 .replace("TemplateApp", appName)
 
-            @Suppress("SwallowedException", "TooGenericExceptionCaught")
-            try {
-                file.writeText(updatedContents)
-            } catch (e: Exception) {
-                printRed(
-                    """
-                    Could not update the file named ${file.name} to replace "templateapp" with "$appName". 
-                    you may need to make this update manually. 
-                    """.trimMargin()
-                )
-            }
+            updateFileContents(file, updatedContents, appName)
         }
     }
 }
 
 main()
+
+fun updateFileContents(file: File, updatedContents: String, appName: String) {
+    @Suppress("SwallowedException", "TooGenericExceptionCaught")
+    try {
+        file.writeText(updatedContents)
+    } catch (e: Exception) {
+        printRed(
+            """
+                    Could not update the file named ${file.name} to replace "templateapp" with "$appName". 
+                    you may need to make this update manually. 
+            """.trimMargin()
+        )
+    }
+}
+
+fun updateDirectoryName(file: File, appName: String) {
+    if (file.name.contains("templateapp") || file.name.contains("TemplateApp")) {
+        val newName = file.name
+            .replace("templateapp", appName.lowercase())
+            .replace("TemplateApp", appName)
+
+        file.renameTo(File("${file.parent}/$newName"))
+    }
+}
