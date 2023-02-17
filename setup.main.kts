@@ -95,7 +95,7 @@ fun resetVersionCodeAndName(newProjectDir: String) {
     properties.load(reader)
     reader.close()
 
-    properties.setProperty("versionCode", "0")
+    properties.setProperty("versionCode", "1")
     properties.setProperty("versionName", "1.0")
 
     val writer = BufferedWriter(FileWriter("$newProjectDir/app.properties"))
@@ -121,6 +121,15 @@ fun updateTemplateWithAppName(directory: File, appName: String) {
     val files = directory.listFiles()
     files?.forEach { file ->
         if (file.isDirectory && !doNotCopy.contains(file.name)) {
+            if (file.name.contains("templateapp") || file.name.contains("TemplateApp")) {
+
+                val newName = file.name
+                    .replace("templateapp", appName.lowercase())
+                    .replace("TemplateApp", appName)
+
+                file.renameTo(File(newName))
+            }
+
             updateTemplateWithAppName(file, appName)
         } else if (file.isFile && !doNotCopy.contains(file.name)) {
             val originalContents = file.readText()
