@@ -15,6 +15,7 @@ For each PR the system runs:
 Updates to pull requests cancel any ongoing ci workflows for that pr and re run the 
 ci system again. 
 
+You can find an example PR showing the results of this CI system [here](https://github.com/Elijah-Dangerfield/TemplateApp/pull/2)
 
 ## The CD
 
@@ -38,7 +39,7 @@ From there you just need to run the workflow by clicking the `Run Workflow` butt
 ![Screen Shot 2023-02-16 at 10 37 24 PM](https://user-images.githubusercontent.com/45648517/219713573-7bad2660-d0e3-4cac-bbdd-d00d091211d4.png)
 
 
-After doing this the CD system will update the `version code` and the `version name` in the code base, commit those changes and create a PR. 
+After doing this the CD system will update the `version code` and the `version name` in the code base, commit those changes and then create a PR. 
 
 The CI system will them run tests, static code analysis and create builds for the new release. 
 
