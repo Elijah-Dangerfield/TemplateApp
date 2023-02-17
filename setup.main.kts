@@ -117,17 +117,23 @@ fun resetVersionCodeAndName(newProjectDir: String) {
     writer.close()
 }
 
+@Suppress("NestedBlockDepth")
 fun updateTemplateWithAppName(directory: File, appName: String) {
     val files = directory.listFiles()
     files?.forEach { file ->
         if (file.isDirectory && !doNotCopy.contains(file.name)) {
             if (file.name.contains("templateapp") || file.name.contains("TemplateApp")) {
-
+                val origionalName = file.absolutePath
                 val newName = file.name
                     .replace("templateapp", appName.lowercase())
                     .replace("TemplateApp", appName)
 
-                file.renameTo(File(newName))
+                val success = file.renameTo(File(newName))
+                if (success) {
+                    println("$origionalName Directory renamed successfully to $newName")
+                } else {
+                    println("$origionalName Directory renamed failed to $newName")
+                }
             }
 
             updateTemplateWithAppName(file, appName)
