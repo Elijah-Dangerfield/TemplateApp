@@ -69,6 +69,7 @@ fun main() {
            
         3. On github under project -> settings -> actions -> general, set the Workflow permissions to be read & write
         4. run ` gradle wrapper` in the new project (otherwise gradle is upset)
+        5. youll want to make all scripts in the new project executable by running : `chmod +x scripts/*`
                    
         """.trimIndent()
     )
