@@ -80,8 +80,9 @@ fun updateSettingGradleFile(baseDir: String, moduleName: String, parentModule: S
     val indexOfFirstInclude = settingsLines.indexOfFirst { it.matches(includePattern.toRegex()) }
     val indexOfLastInclude = settingsLines.indexOfLast { it.matches(includePattern.toRegex()) }
 
-    settingsLines.subList(indexOfFirstInclude, indexOfLastInclude).sort()
-
+    settingsLines.subList(indexOfFirstInclude, indexOfLastInclude).sortBy {
+        it.substringAfter("include(").substringBeforeLast(")")
+    }
     settingsFile.writeText(settingsLines.joinToString("\n"))
 }
 
