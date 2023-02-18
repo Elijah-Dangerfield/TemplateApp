@@ -42,4 +42,4 @@ On github under project -> settings -> actions -> general, set the Workflow perm
            
 ### 6. Setup gradle in the new project
 run ` gradle wrapper` in the new project (otherwise gradle is upset)
-youll also want to make all scripts in the new project executable by running : `chmod +x scripts/*`
+youll also want to make all scripts in the new project executable by running : `chmod u+x ./scripts/**/*.kts`
