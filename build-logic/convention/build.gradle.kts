@@ -14,8 +14,6 @@ dependencies {
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
     implementation("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${libs.versions.detekt.get()}")
-    implementation("com.google.firebase:firebase-admin:9.1.1")
-    implementation("com.google.gms:google-services:4.3.14")
 }
 
 gradlePlugin {
