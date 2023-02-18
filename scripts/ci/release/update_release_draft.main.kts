@@ -53,6 +53,11 @@ fun main() {
 
     val repo = getRepository(githubRepoInfo, githubToken)
 
+    val vXyzMatcher = "v\\d+\\.\\d+\\.\\d+".toRegex()
+    val vXyMatcher = "v\\d+\\.\\d+".toRegex()
+
+    val releaseTitle = (vXyzMatcher.find(tagName) ?: vXyMatcher.find(tagName))?.value ?: tagName
+
     val releaseDraft = repo
         .listReleases()
         .firstOrNull { it.tagName == tagName && it.isDraft }
@@ -60,7 +65,7 @@ fun main() {
             .createRelease(tagName)
             .draft(true)
             .body(body)
-            .name("Release $tagName")
+            .name(releaseTitle)
             .create()
 
     releaseDraft.listAssets().forEach { it.delete() }
