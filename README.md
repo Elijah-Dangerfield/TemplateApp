@@ -40,4 +40,5 @@ Save that token as a secret in the repository named **REPO_SCOPED_TOKEN**
 ### 5. Set permissions for Github actions
 On github under project -> settings -> actions -> general, set the Workflow permissions to be read & write
            
-### 6. Enjoy the fruits of my labor
+### 6. Setup gradle in the new project
+run ` gradle wrapper` in the new project (otherwise gradle is upset)
